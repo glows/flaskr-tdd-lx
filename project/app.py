@@ -1,5 +1,7 @@
 import sqlite3
-from flask import Flask, g, render_template, request, session, flash, redirect, url_for, abort, jsonify
+from flask import Flask, g, render_template, \
+    request, session, flash, \
+    redirect, url_for, abort, jsonify
 
 #
 DATABASE = "flaskr.db"
@@ -79,11 +81,11 @@ def logout():
     return redirect(url_for('index'))
 
 
-@app.route("/add", methods=['POST'])
+@app.route('/add', methods=['POST'])
 def add_entry():
-    """Add new post."""
+    """Add new post to database."""
     if not session.get('logged_in'):
-        abort(402)
+        abort(401)
     db = get_db()
     db.execute(
         'insert into entries (title, text) values (?, ?)',
@@ -92,6 +94,7 @@ def add_entry():
     db.commit()
     flash('New entry was successfully posted')
     return redirect(url_for('index'))
+
 
 @app.route('/delete/<post_id>', methods=['GET'])
 def delete_entry(post_id):
