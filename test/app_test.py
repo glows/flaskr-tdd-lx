@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 import pytest
+import json
 
 from project.app import app, init_db
 
@@ -30,12 +31,12 @@ def logout(client):
     return client.get("/logout", follow_redirects=True)
 
 
-def test_index():
-    tester = app.test_client()
-    response = tester.get("/", content_type="html/text")
+def test_index(client):
+    # tester = app.test_client()
+    response = client.get("/", content_type="html/text")
 
     assert response.status_code == 200
-    assert response.data == b"Hello, world!"
+    # assert response.data == b"Hello, world!"
     
 def test_database():
     init_db()
@@ -48,29 +49,33 @@ def test_empty_db(client):
 
 
 def test_login_logout(client):
-    """Test Login and Logout using helper function"""
+    """Test login and logout using helper functions"""
     rv = login(client, app.config["USERNAME"], app.config["PASSWORD"])
     assert b"You were logged in" in rv.data
     rv = logout(client)
     assert b"You were logged out" in rv.data
-    rv = login(client, app.config["USERNAME"]+ "x", app.config["PASSWORD"])
+    rv = login(client, app.config["USERNAME"] + "x", app.config["PASSWORD"])
     assert b"Invalid username" in rv.data
-    rv = login(client, app.config["USERNAME"], app.config["PASSWORD"] +'x')
+    rv = login(client, app.config["USERNAME"], app.config["PASSWORD"] + "x")
     assert b"Invalid password" in rv.data
 
 
 def test_messages(client):
-    """Ensure that user can post message"""
+    """Ensure that user can post messages"""
     login(client, app.config["USERNAME"], app.config["PASSWORD"])
     rv = client.post(
         "/add",
         data=dict(title="<Hello>", text="<strong>HTML</strong> allowed here"),
-        follow_redirects = True,
+        follow_redirects=True,
     )
-    assert b"No entries here so  far" not in rv.data
+    assert b"No entries here so far" not in rv.data
     assert b"&lt;Hello&gt;" in rv.data
-    assert b"<strong>Html</strong> allowed here" in rv.data
+    assert b"<strong>HTML</strong> allowed here" in rv.data
     
     
-    
+def test_delete_message(client):
+    """Ensure the messages are being deleted"""
+    rv = client.get('/delete/1')
+    data = json.loads(rv.data)
+    assert data["status"] == 1
     
